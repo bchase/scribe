@@ -25,6 +25,14 @@ function screenshot()
   -- write metadata
 end
 
+function parse_ass()
+  -- /^Dialouge: \d+,((\d+):(\d+):(\d).(\d)),((\d+):(\d+):(\d+).(\d+)),(.+),,\s+(.+)$/
+  local pattern = "Dialouge: "
+end
+
+function parse_srt()
+end
+
 function get_video_uri()
 	local video_uri = vlc.input.item():uri()
 	video_uri = vlc.strings.decode_uri(video_uri)
@@ -34,7 +42,7 @@ end
 function get_subtitle_file()
   local video_uri = get_video_uri()
   local extensions = {'.ass','.srt'}
-	local sub_file_name = string.gsub(video_uri, "^.-///(.*)%..-$","%1")
+  local sub_file_name = string.gsub(video_uri, "^.-///(.*)%..-$","%1")
 
   for index, extension in pairs(extensions) do
     sub_full_path = sub_file_name..extension
@@ -53,4 +61,5 @@ function get_subtitle_file()
   end
 end
 
--- subtitle = vlc.var.libvlc_command("libvlc_video_get_spu", vlc.object.libvlc())
+-- sub_delay = vlc.var.get(vlc.object.input(), 'spu-delay')
+--subtitle = pcall(vlc.var.libvlc_command, libvlc_video_get_spu)
