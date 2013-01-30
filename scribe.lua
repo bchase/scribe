@@ -16,10 +16,10 @@ function activate()
   --vlc.msg.info("[Scribe] Activating\n")
   -- [ ] register hotkey
   
-  -- [\] parse .ass
+  -- [X] parse .ass
   -- [ ] parse .srt
   subtitles = parse_subtitles()
-  print(#subtitles)
+  print("Parsed "..#subtitles.." subtitles.")
 
 	time_num      = time_num()
   sub_delay_num = sub_delay_num()
@@ -45,15 +45,10 @@ function screenshot()
 end
 
 function get_subtitle_for_time_num(time_num, subtitles)
-  print('get sub for time num')
-  print(time_num)
-  print(#subtitles)
   for times, text in pairs(subtitles) do
     start_num  = times[1]
     finish_num = times[2]
 
-    --print(start_num, finish_num, text)
-    --print(time_num.." >= "..start_num.." and "..time_num.." <= "..finish_time)
     if (time_num >= start_num) and (time_num <= finish_num) then
       return text
     end
@@ -61,7 +56,11 @@ function get_subtitle_for_time_num(time_num, subtitles)
 end
 
 function parse_subtitles()
+  print('parse subs')
   file_path_and_extension = get_subtitle_file_path()
+
+  if not file_path_and_extension then return end
+
   file_path = file_path_and_extension[1]
   extension = file_path_and_extension[2]
   print(file_path)
@@ -83,7 +82,6 @@ function parse_ass_subtitles(file_path)
   
   for line in io.lines(file_path) do
     if string.find(line, "^Dialogue") then
-      print(line)
       timestamp_pattern = "%d+:%d+:%d+\.%d+,%d+:%d+:%d+\.%d+"
 
       timestamps = string.sub(line, string.find(line, timestamp_pattern))
@@ -118,10 +116,39 @@ function ass_timestamp_to_number(timestamp)
 end
 
 function parse_srt_subtitles(file_path)
+  print('parse srt subs')
   -- e.g. ...
   -- 4
   -- 00:00:23,830 --> 00:00:26,330
   -- 握らせてもらったよ。
+  
+  subtitles = {}
+
+  times = nil
+  
+  for line in io.lines(file_path) do
+    print(line)
+    if string.find(line, "^%d+:%d+") then
+      print('  treating "'..line..'" as timestamp')
+      timestamp_pattern = "%d+:%d+:%d+\.%d+,%d+:%d+:%d+\.%d+"
+
+      timestamps = string.sub(line, string.find(line, timestamp_pattern))
+
+      start  = string.sub(timestamps, 1, 10)
+      finish = string.sub(timestamps, 12, 21)
+
+      start_num  = ass_timestamp_to_number(start)
+      finish_num = ass_timestamp_to_number(finish)
+
+      times = {start_num, finish_num}
+    elseif not string.find(line, "^$") and not string.find(line, "^%d+$") then
+      print('  treating "'..line..'" as sub text')
+      -- if line is not empty and not just a number...
+      subtitles[times] = line
+    end
+  end
+
+  return subtitles
 end
 
 function srt_timestamp_to_number(timestamp)
@@ -157,6 +184,7 @@ function get_video_uri()
 end
 
 function get_subtitle_file_path()
+  print('get sub file path')
   local video_uri = get_video_uri()
   local extensions = {'.ass','.srt'}
   local sub_file_name = string.gsub(video_uri, "^.-///(.*)%..-$","%1")
@@ -165,6 +193,7 @@ function get_subtitle_file_path()
     sub_full_path = sub_file_name..extension
     file = io.open(sub_full_path,'r')
 
+    print('   try '..sub_full_path)
     if file then 
       return {sub_full_path, extension}
     end
@@ -172,10 +201,12 @@ function get_subtitle_file_path()
     sub_full_path = "/"..sub_file_name..extension
     file = io.open(sub_full_path,'r')
 
+    print('   try '..sub_full_path)
     if file then 
       return {sub_full_path, extension}
     end
   end
+  print('found no path...')
 end
 
 --function input_callback(action)  -- action=add/del/toggle
