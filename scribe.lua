@@ -128,12 +128,20 @@ function parse_srt_subtitles(file_path)
   
   for line in io.lines(file_path) do
     print(line)
-    if string.find(line, "^%d+:%d+") then
-      print('  treating "'..line..'" as timestamp')
-      timestamp_pattern = "%d+:%d+:%d+\.%d+,%d+:%d+:%d+\.%d+"
+    line = string.gsub(line, "\r$", "")
+    line = string.gsub(line, "\n$", "")
+    print(string.len(line))
+
+    if string.find(line, "^%d+:%d+:%d+,%d+") then
+      print('timestamp:')
+      print(line)
+
+      -- TODO
+      timestamp_pattern = "%d+:%d+:%d+\.%d+ --> %d+:%d+:%d+\.%d+"
 
       timestamps = string.sub(line, string.find(line, timestamp_pattern))
 
+      -- TODO
       start  = string.sub(timestamps, 1, 10)
       finish = string.sub(timestamps, 12, 21)
 
@@ -141,8 +149,13 @@ function parse_srt_subtitles(file_path)
       finish_num = ass_timestamp_to_number(finish)
 
       times = {start_num, finish_num}
-    elseif not string.find(line, "^$") and not string.find(line, "^%d+$") then
-      print('  treating "'..line..'" as sub text')
+    elseif string.find(line, "^%d+$") or string.find(line, "^$") then
+      print('skip:')
+      print(line)
+      -- NO-OP
+    else
+      print('text:')
+      print(line)
       -- if line is not empty and not just a number...
       subtitles[times] = line
     end
@@ -184,7 +197,6 @@ function get_video_uri()
 end
 
 function get_subtitle_file_path()
-  print('get sub file path')
   local video_uri = get_video_uri()
   local extensions = {'.ass','.srt'}
   local sub_file_name = string.gsub(video_uri, "^.-///(.*)%..-$","%1")
@@ -193,7 +205,6 @@ function get_subtitle_file_path()
     sub_full_path = sub_file_name..extension
     file = io.open(sub_full_path,'r')
 
-    print('   try '..sub_full_path)
     if file then 
       return {sub_full_path, extension}
     end
@@ -201,12 +212,12 @@ function get_subtitle_file_path()
     sub_full_path = "/"..sub_file_name..extension
     file = io.open(sub_full_path,'r')
 
-    print('   try '..sub_full_path)
     if file then 
       return {sub_full_path, extension}
     end
   end
-  print('found no path...')
+
+  print('found no subtitle file...')
 end
 
 --function input_callback(action)  -- action=add/del/toggle
