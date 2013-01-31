@@ -30,7 +30,7 @@ function activate()
     -- [\] detect OS
     -- [\] set proper ss dir path
     -- [X] get latest screenshot path
-  -- [\] POST sub text and image to service
+  -- [!] POST sub text and image to service
   
   subtitles = parse_subtitles()
   print("Parsed "..#subtitles.." subtitles.")
@@ -49,8 +49,10 @@ function activate()
   print('2')
   image_file = get_screenshot_file(file_name)
   print('3')
+  file_size  = image_file:seek("end")
+  image_file:seek("set", 0) -- rewind file
 
-  post_to_service(sub_text, image_file)
+  post_to_service(sub_text, image_file, file_size)
   print('4')
 end
 
@@ -281,17 +283,12 @@ function get_subtitle_file_path()
   print('found no subtitle file...')
 end
 
-function post_to_service(sub_text, image_file)
-  print('Sending file and text... ')
+function post_to_service(sub_text, image_file, file_size)
   http  = require('socket.http')
   ltn12 = require('ltn12')
 
-  file_size = image_file:seek("end")
-  print(file_size)
+  print('Sending file and text... ')
 
-  image_file:seek("set", 0) -- rewind file
-
-  print('before request')
   http.request {
     url     = 'http://localhost:3000/',
     method  = 'POST',
