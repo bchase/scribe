@@ -15,33 +15,36 @@ end
 function activate()
   --vlc.msg.info("[Scribe] Activating\n")
   -- [ ] register hotkey
-  
-  -- [X] parse .ass
-  -- [ ] parse .srt
-  subtitles = parse_subtitles()
-  print("Parsed "..#subtitles.." subtitles.")
 
-	time_num      = time_num()
-  sub_delay_num = sub_delay_num()
-
-  sub_time_num  = time_num + sub_delay_num
-
-  sub_text = get_subtitle_for_time_num(sub_time_num, subtitles)
-
-  screenshot()
-  --input_callback('add')
-end
-
-function screenshot()
   -- [ ] pause
   -- [X] get subtitle text
-  -- [X] take screenshot -- vlc.var.command(vlc.object, 'snapshot')
+    -- [X] parse .ass
+    -- [.] parse .srt
+  -- [X] take screenshot 
   -- [ ] play
  
   -- [ ] load screenshot
   -- [ ] write metadata
   
-  -- [ ] POST to server image
+  -- [\] POST to server image
+  
+  --subtitles = parse_subtitles()
+  --print("Parsed "..#subtitles.." subtitles.")
+
+	--time_num      = time_num()
+  --sub_delay_num = sub_delay_num()
+
+  --sub_time_num  = time_num + sub_delay_num
+
+  --sub_text = get_subtitle_for_time_num(sub_time_num, subtitles)
+
+  --screenshot()
+end
+
+function screenshot()
+  --local vout = vlc.object.vout()
+  --if not vout then return end
+  --vlc.var.set(vout,"video-snapshot",nil)
 end
 
 function get_subtitle_for_time_num(time_num, subtitles)
@@ -220,6 +223,28 @@ function get_subtitle_file_path()
   print('found no subtitle file...')
 end
 
+function post_to_service(text, image_path)
+  http  = require('socket.http')
+  ltn12 = require('ltn12')
+
+  file      = io.open(image_path)
+  file_size = file:seek("end")
+  print(file_size)
+
+  file:seek("set", 0) -- rewind file
+
+  http.request {
+    url = 'http://localhost:3000/',
+    method = 'POST',
+    headers = {
+      ['Content-Type']   = 'multipart/form-data',
+      ['Content-Length'] = file_size
+    },
+    source = ltn12.source.file(file),
+    sink   = ltn12.sink.table(response_body)
+  }
+end
+
 --function input_callback(action)  -- action=add/del/toggle
 --  vlc.msg.info("[Scribe] assigning callback\n")
 --  -- action = 'add'
@@ -243,5 +268,9 @@ end
 
 -- sub_delay = vlc.var.get(vlc.object.input(), 'spu-delay')
 -- subtitle = pcall(vlc.var.libvlc_command, libvlc_video_get_spu)
+-- vlc.var.command(vlc.object, 'snapshot')
+
+-- "I will not install luasocket but liblua5.1-socket2 instead"
+  -- After this operation, 244 kB of additional disk space will be used.
 
 --activate()
