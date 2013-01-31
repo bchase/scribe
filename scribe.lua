@@ -32,20 +32,26 @@ function activate()
     -- [X] get latest screenshot path
   -- [\] POST sub text and image to service
   
-  --subtitles = parse_subtitles()
-  --print("Parsed "..#subtitles.." subtitles.")
+  subtitles = parse_subtitles()
+  print("Parsed "..#subtitles.." subtitles.")
 
-	--time_num      = time_num()
-  --sub_delay_num = sub_delay_num()
+	time_num      = time_num()
+  sub_delay_num = sub_delay_num()
+  sub_time_num  = time_num + sub_delay_num
 
-  --sub_time_num  = time_num + sub_delay_num
+  sub_text = get_subtitle_for_time_num(sub_time_num, subtitles)
+  print("Subtitle text: "..sub_text)
 
-  --sub_text = get_subtitle_for_time_num(sub_time_num, subtitles)
-
+  print('1')
   file_name = get_screenshot_file_name()
   print(file_name)
   screenshot()
+  print('2')
   image_file = get_screenshot_file(file_name)
+  print('3')
+
+  post_to_service(sub_text, image_file)
+  print('4')
 end
 
 function screenshot()
@@ -90,16 +96,15 @@ function get_screenshot_file(file_name)
   while i >= 0 and not file do
     test_fname = file_name..i..".png"
     file_path  = ss_dir..test_fname
-    print(file_path)
-    file = io.open(file_path)
-    i = i - 1
+    file       = io.open(file_path)
+
+    if file then 
+      print("Screenshot file:"..file_path)
+      return file 
+    end
+
+    i          = i - 1
   end
-
-  print("FILE: "..file_path)
-  -- vlcsnap-2013-01-31-03h58m48s67.png
-  -- vlcsnap-2013-01-31-03h58m48s67.png
-
-  return file
 end
 
 function get_subtitle_for_time_num(time_num, subtitles)
@@ -114,14 +119,12 @@ function get_subtitle_for_time_num(time_num, subtitles)
 end
 
 function parse_subtitles()
-  print('parse subs')
   file_path_and_extension = get_subtitle_file_path()
 
   if not file_path_and_extension then return end
 
   file_path = file_path_and_extension[1]
   extension = file_path_and_extension[2]
-  print(file_path)
 
   subtitles = {}
 
@@ -278,26 +281,28 @@ function get_subtitle_file_path()
   print('found no subtitle file...')
 end
 
-function post_to_service(text, image_path)
+function post_to_service(sub_text, image_file)
+  print('Sending file and text... ')
   http  = require('socket.http')
   ltn12 = require('ltn12')
 
-  file      = io.open(image_path)
-  file_size = file:seek("end")
+  file_size = image_file:seek("end")
   print(file_size)
 
-  file:seek("set", 0) -- rewind file
+  image_file:seek("set", 0) -- rewind file
 
+  print('before request')
   http.request {
-    url = 'http://localhost:3000/',
-    method = 'POST',
+    url     = 'http://localhost:3000/',
+    method  = 'POST',
     headers = {
       ['Content-Type']   = 'multipart/form-data',
       ['Content-Length'] = file_size
     },
-    source = ltn12.source.file(file),
-    sink   = ltn12.sink.table(response_body)
+    source  = ltn12.source.file(file),
+    sink    = ltn12.sink.table(response_body)
   }
+  print('File sent!')
 end
 
 --function input_callback(action)  -- action=add/del/toggle
