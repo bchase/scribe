@@ -5,8 +5,8 @@ function descriptor()
     version = "0.1",
     author = "Brad Chase",
     url = 'http://webappfromscratch.com/author/',
-    shortdesc = "Adds subtitle text to screenshot metadata",
-    description = "Adds subtitle text to screenshot metadata",
+    shortdesc = "Sends a screenshot and its subtitle text to a web service",
+    description = "Sends a screenshot and its subtitle text to a web service",
     capabilities = {}
   }
 end

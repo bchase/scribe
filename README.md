@@ -1,6 +1,6 @@
 # Scribe
 
-A VLC plugin to write subtitle text to screenshot metadata.
+A VLC plugin to send a screenshot and its subtitle text to a web service.
 
 Presently **under construction**, no actual functionality yet.
 
