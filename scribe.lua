@@ -13,6 +13,8 @@ end
 
 -- start extention
 function activate()
+  --fpath = "/home/bosco/Downloads/Tokkan.720p.HDTV.x264-mTHD/Tokkan01.srt"
+  --parse_srt_subtitles(fpath)
   --vlc.msg.info("[Scribe] Activating\n")
   -- [ ] register hotkey
 
@@ -40,7 +42,7 @@ function activate()
   subtitles = parse_subtitles()
   print("Parsed "..#subtitles.." subtitles.")
 
-	time_num      = time_num()
+	--time_num      = time_num()
   sub_delay_num = sub_delay_num()
   sub_time_num  = time_num + sub_delay_num
 
@@ -199,37 +201,51 @@ function parse_srt_subtitles(file_path)
   subtitles = {}
 
   times = nil
+
+  first = true
   
   for line in io.lines(file_path) do
-    print(line)
+    --print('len orig ' .. string.len(line))
+    --print(line)
+    
+    -- TODO match %d instead of slice first 3
+    if first then
+      line = string.sub(line,4,#line)
+      first = false
+    end
     line = string.gsub(line, "\r$", "")
     line = string.gsub(line, "\n$", "")
-    print(string.len(line))
+    --line = string.gsub(line, "%s+$", "")
+    --line = string.gsub(line, "%z+$", "")
+    --line = string.gsub(line, "%c+$", "")
+
+    --print('len mod ' .. string.len(line))
+    --print(line)
 
     if string.find(line, "^%d+:%d+:%d+,%d+") then
-      print('timestamp:')
-      print(line)
+      --print('srt sub timestamp:')
+      --print(line)
 
-      -- TODO
-      timestamp_pattern = "%d+:%d+:%d+\.%d+ --> %d+:%d+:%d+\.%d+"
+      start  = string.sub(line, 1, 12)
+      finish = string.sub(line, 18, 29)
 
-      timestamps = string.sub(line, string.find(line, timestamp_pattern))
-
-      -- TODO
-      start  = string.sub(timestamps, 1, 10)
-      finish = string.sub(timestamps, 12, 21)
-
-      start_num  = ass_timestamp_to_number(start)
-      finish_num = ass_timestamp_to_number(finish)
+      start_num  = srt_timestamp_to_number(start)
+      finish_num = srt_timestamp_to_number(finish)
 
       times = {start_num, finish_num}
     elseif string.find(line, "^%d+$") or string.find(line, "^$") then
-      print('skip:')
-      print(line)
+      --print('skip srt line:')
+      --print(line)
       -- NO-OP
     else
-      print('text:')
-      print(line)
+      --print('srt sub text:')
+      --print(line)
+
+      --for i = 1, #line do
+      --  --local c = line:sub(i,1)
+      --  print('char '..i..' has val: '..string.byte(line, i))
+      --end
+
       -- if line is not empty and not just a number...
       subtitles[times] = line
     end
@@ -341,4 +357,4 @@ end
 -- "I will not install luasocket but liblua5.1-socket2 instead"
   -- After this operation, 244 kB of additional disk space will be used.
 
---activate()
+activate()
