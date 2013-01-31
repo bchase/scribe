@@ -17,16 +17,20 @@ function activate()
   -- [ ] register hotkey
 
   -- [ ] pause
+  
   -- [X] get subtitle text
     -- [X] parse .ass
     -- [.] parse .srt
+  -- [X] generate ss name
   -- [X] take screenshot 
-  -- [ ] play
- 
-  -- [ ] load screenshot
-  -- [ ] write metadata
   
-  -- [\] POST to server image
+  -- [ ] play
+  
+  -- [\] find new screenshot file
+    -- [\] detect OS
+    -- [\] set proper ss dir path
+    -- [X] get latest screenshot path
+  -- [\] POST sub text and image to service
   
   --subtitles = parse_subtitles()
   --print("Parsed "..#subtitles.." subtitles.")
@@ -38,13 +42,64 @@ function activate()
 
   --sub_text = get_subtitle_for_time_num(sub_time_num, subtitles)
 
-  --screenshot()
+  file_name = get_screenshot_file_name()
+  print(file_name)
+  screenshot()
+  image_file = get_screenshot_file(file_name)
 end
 
 function screenshot()
-  --local vout = vlc.object.vout()
-  --if not vout then return end
-  --vlc.var.set(vout,"video-snapshot",nil)
+  local vout = vlc.object.vout()
+  if not vout then return end
+  vlc.var.set(vout,"video-snapshot",nil)
+end
+
+function get_screenshots_dir_path()
+  ver = io.popen('ver'):read("*a")
+  if string.find(ver, "Windows") then
+    -- WINDOWS TODO
+    return "My Documents\\My Pictures \\"
+  else
+    uname = io.popen('uname'):read("*a")
+    user  = io.popen('whoami'):read("*a")
+    user  = string.gsub(user, "\r$", "")
+    user  = string.gsub(user, "\n$", "")
+    if string.find(uname, 'Linux') then
+      -- LINUX
+      return "/home/"..user.."/Pictures/"
+    elseif string.find(uname, 'Mac') then
+      -- MAC TODO + user
+      return "Pictures/"
+    end
+  end
+end
+
+function get_screenshot_file_name()
+  -- "vlcsnap-YYYY-MM-DD-HHhMMmSSs.png"
+  -- TODO !!! handle case of split second
+  file_name = os.date("vlcsnap-%Y-%m-%d-%Hh%Mm%Ss")
+  return file_name
+end
+
+function get_screenshot_file(file_name)
+  ss_dir    = get_screenshots_dir_path()
+  file      = nil
+  file_path = nil
+
+  i = 999
+  while i >= 0 and not file do
+    test_fname = file_name..i..".png"
+    file_path  = ss_dir..test_fname
+    print(file_path)
+    file = io.open(file_path)
+    i = i - 1
+  end
+
+  print("FILE: "..file_path)
+  -- vlcsnap-2013-01-31-03h58m48s67.png
+  -- vlcsnap-2013-01-31-03h58m48s67.png
+
+  return file
 end
 
 function get_subtitle_for_time_num(time_num, subtitles)
