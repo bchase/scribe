@@ -16,7 +16,7 @@ function activate()
   --vlc.msg.info("[Scribe] Activating\n")
   -- [ ] register hotkey
 
-  -- [ ] pause
+  -- [X] pause
   
   -- [X] get subtitle text
     -- [X] parse .ass
@@ -24,14 +24,19 @@ function activate()
   -- [X] generate ss name
   -- [X] take screenshot 
   
-  -- [ ] play
+  -- [X] play
   
   -- [\] find new screenshot file
     -- [\] detect OS
     -- [\] set proper ss dir path
     -- [X] get latest screenshot path
   -- [!] POST sub text and image to service
+    -- [ ] require socket.http from src?
+    -- [ ] call another script to make the call
   
+  pause()
+
+  -- TODO cache subtitles per file
   subtitles = parse_subtitles()
   print("Parsed "..#subtitles.." subtitles.")
 
@@ -42,18 +47,24 @@ function activate()
   sub_text = get_subtitle_for_time_num(sub_time_num, subtitles)
   print("Subtitle text: "..sub_text)
 
-  print('1')
   file_name = get_screenshot_file_name()
-  print(file_name)
   screenshot()
-  print('2')
+
+  play()
+
   image_file = get_screenshot_file(file_name)
-  print('3')
   file_size  = image_file:seek("end")
   image_file:seek("set", 0) -- rewind file
 
   post_to_service(sub_text, image_file, file_size)
-  print('4')
+end
+
+function play()
+  vlc.playlist.play()
+end
+
+function pause()
+  vlc.playlist.pause()
 end
 
 function screenshot()
